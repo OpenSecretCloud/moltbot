@@ -1,5 +1,59 @@
 # 🦞 Moltbot — Personal AI Assistant
 
+> ## ⚠️ OpenSecret Maple Fork (Experimental)
+>
+> This is an **experimental fork** of Moltbot with integrated support for [Maple](https://trymaple.ai) —
+> OpenSecret's TEE-secured (Trusted Execution Environment) LLM inference service. All requests to
+> Maple models are end-to-end encrypted using AWS Nitro enclave attestation.
+>
+> ### Quick Start with Maple
+>
+> ```bash
+> # Clone this fork
+> git clone https://github.com/OpenSecretCloud/moltbot.git
+> cd moltbot
+>
+> # Install dependencies (requires Node 22+)
+> pnpm install
+>
+> # Set your Maple API key
+> export MAPLE_API_KEY="your-maple-api-key"
+>
+> # Run with Maple's Kimi K2 Thinking model (default when MAPLE_API_KEY is set)
+> pnpm moltbot agent --agent main --local -m "Hello"
+>
+> # Or use nix for reproducible environment
+> nix develop
+> pnpm install && pnpm build
+> MAPLE_API_KEY="your-key" pnpm moltbot agent --agent main --local -m "Hello"
+> ```
+>
+> ### Available Maple Models
+>
+> | Model ID | Description |
+> |----------|-------------|
+> | `maple/kimi-k2-thinking` | Kimi K2 with extended thinking (default) |
+> | `maple/llama3-3-70b` | Llama 3.3 70B |
+> | `maple/gpt-oss-120b` | GPT-OSS 120B (reasoning) |
+> | `maple/deepseek-r1-0528` | DeepSeek R1 (reasoning) |
+> | `maple/qwen3-coder-480b` | Qwen3 Coder 480B |
+> | `maple/qwen3-vl-30b` | Qwen3 VL 30B (vision) |
+>
+> ### Environment Variables
+>
+> - `MAPLE_API_KEY` — Your Maple API key (required)
+> - `MAPLE_API_URL` — Custom API URL (default: `https://enclave.trymaple.ai/v1/`)
+>
+> ### Fork Status
+>
+> This fork includes:
+> - Custom `maple-fetch.ts` for TEE-encrypted requests
+> - Forked `@mariozechner/pi-ai` with `customFetch` support ([OpenSecretCloud/pi-mono](https://github.com/OpenSecretCloud/pi-mono))
+>
+> **Note:** This is experimental. For production use, wait for upstream PRs or official releases.
+>
+> ---
+
 <p align="center">
   <img src="https://raw.githubusercontent.com/moltbot/moltbot/main/docs/whatsapp-clawd.jpg" alt="Clawdbot" width="400">
 </p>
