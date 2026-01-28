@@ -75,6 +75,17 @@ const OLLAMA_DEFAULT_COST = {
   cacheWrite: 0,
 };
 
+// Maple (TEE-secured LLM inference via OpenSecret)
+export const MAPLE_DEFAULT_BASE_URL = "https://enclave.trymaple.ai/v1/";
+const _MAPLE_DEFAULT_CONTEXT_WINDOW = 128000; // reserved for future use
+const MAPLE_DEFAULT_MAX_TOKENS = 8192;
+const MAPLE_DEFAULT_COST = {
+  input: 4,
+  output: 4,
+  cacheRead: 0,
+  cacheWrite: 0,
+};
+
 interface OllamaModel {
   name: string;
   modified_at: string;
@@ -359,6 +370,70 @@ async function buildOllamaProvider(): Promise<ProviderConfig> {
   };
 }
 
+function buildMapleProvider(): ProviderConfig {
+  const baseUrl = process.env.MAPLE_API_URL?.trim() || MAPLE_DEFAULT_BASE_URL;
+  return {
+    baseUrl,
+    api: "openai-completions",
+    models: [
+      {
+        id: "llama3-3-70b",
+        name: "Llama 3.3 70B",
+        reasoning: false,
+        input: ["text"],
+        cost: MAPLE_DEFAULT_COST,
+        contextWindow: 128000,
+        maxTokens: MAPLE_DEFAULT_MAX_TOKENS,
+      },
+      {
+        id: "gpt-oss-120b",
+        name: "GPT-OSS 120B",
+        reasoning: true,
+        input: ["text"],
+        cost: MAPLE_DEFAULT_COST,
+        contextWindow: 128000,
+        maxTokens: MAPLE_DEFAULT_MAX_TOKENS,
+      },
+      {
+        id: "deepseek-r1-0528",
+        name: "DeepSeek R1",
+        reasoning: true,
+        input: ["text"],
+        cost: MAPLE_DEFAULT_COST,
+        contextWindow: 128000,
+        maxTokens: MAPLE_DEFAULT_MAX_TOKENS,
+      },
+      {
+        id: "kimi-k2-thinking",
+        name: "Kimi K2 Thinking",
+        reasoning: true,
+        input: ["text"],
+        cost: MAPLE_DEFAULT_COST,
+        contextWindow: 256000,
+        maxTokens: MAPLE_DEFAULT_MAX_TOKENS,
+      },
+      {
+        id: "qwen3-coder-480b",
+        name: "Qwen3 Coder 480B",
+        reasoning: false,
+        input: ["text"],
+        cost: MAPLE_DEFAULT_COST,
+        contextWindow: 128000,
+        maxTokens: MAPLE_DEFAULT_MAX_TOKENS,
+      },
+      {
+        id: "qwen3-vl-30b",
+        name: "Qwen3 VL 30B",
+        reasoning: false,
+        input: ["text", "image"],
+        cost: MAPLE_DEFAULT_COST,
+        contextWindow: 256000,
+        maxTokens: MAPLE_DEFAULT_MAX_TOKENS,
+      },
+    ],
+  };
+}
+
 export async function resolveImplicitProviders(params: {
   agentDir: string;
 }): Promise<ModelsConfig["providers"]> {
@@ -416,6 +491,14 @@ export async function resolveImplicitProviders(params: {
     resolveApiKeyFromProfiles({ provider: "ollama", store: authStore });
   if (ollamaKey) {
     providers.ollama = { ...(await buildOllamaProvider()), apiKey: ollamaKey };
+  }
+
+  // Maple provider (TEE-secured inference via OpenSecret)
+  const mapleKey =
+    resolveEnvApiKeyVarName("maple") ??
+    resolveApiKeyFromProfiles({ provider: "maple", store: authStore });
+  if (mapleKey) {
+    providers.maple = { ...buildMapleProvider(), apiKey: mapleKey };
   }
 
   return providers;

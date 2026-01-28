@@ -4,6 +4,7 @@ import { streamSimple } from "@mariozechner/pi-ai";
 
 import type { MoltbotConfig } from "../../config/config.js";
 import { log } from "./logger.js";
+import { createMapleCustomFetch } from "./maple-fetch.js";
 
 /**
  * Resolve provider-specific extra params from model config.
@@ -41,15 +42,18 @@ function createStreamFnWithExtraParams(
   provider: string,
   modelId: string,
 ): StreamFn | undefined {
-  if (!extraParams || Object.keys(extraParams).length === 0) {
+  const isMaple = provider === "maple";
+
+  // For non-maple providers, require extra params
+  if (!isMaple && (!extraParams || Object.keys(extraParams).length === 0)) {
     return undefined;
   }
 
   const streamParams: Partial<SimpleStreamOptions> & { cacheControlTtl?: CacheControlTtl } = {};
-  if (typeof extraParams.temperature === "number") {
+  if (typeof extraParams?.temperature === "number") {
     streamParams.temperature = extraParams.temperature;
   }
-  if (typeof extraParams.maxTokens === "number") {
+  if (typeof extraParams?.maxTokens === "number") {
     streamParams.maxTokens = extraParams.maxTokens;
   }
   const cacheControlTtl = resolveCacheControlTtl(extraParams, provider, modelId);
@@ -57,18 +61,36 @@ function createStreamFnWithExtraParams(
     streamParams.cacheControlTtl = cacheControlTtl;
   }
 
-  if (Object.keys(streamParams).length === 0) {
+  // For non-maple providers, require at least one stream param
+  if (!isMaple && Object.keys(streamParams).length === 0) {
     return undefined;
   }
 
-  log.debug(`creating streamFn wrapper with params: ${JSON.stringify(streamParams)}`);
+  log.debug(
+    `creating streamFn wrapper with params: ${JSON.stringify(streamParams)} provider=${provider}`,
+  );
 
   const underlying = baseStreamFn ?? streamSimple;
-  const wrappedStreamFn: StreamFn = (model, context, options) =>
-    underlying(model as Model<Api>, context, {
+  const wrappedStreamFn: StreamFn = (model, context, options) => {
+    const mergedOptions = {
       ...streamParams,
       ...options,
-    });
+    };
+
+    // For Maple provider, inject customFetch for TEE-encrypted requests
+    if (isMaple) {
+      log.debug(`Maple provider detected, options.apiKey=${options?.apiKey ? "set" : "not set"}`);
+      if (options?.apiKey) {
+        const customFetch = createMapleCustomFetch(options.apiKey);
+        (mergedOptions as SimpleStreamOptions).customFetch = customFetch;
+        log.debug("injected Maple customFetch for TEE-encrypted inference");
+      } else {
+        log.warn("Maple provider but no apiKey in options - customFetch not injected");
+      }
+    }
+
+    return underlying(model as Model<Api>, context, mergedOptions);
+  };
 
   return wrappedStreamFn;
 }

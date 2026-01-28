@@ -1,6 +1,6 @@
 // Defaults for agent metadata when upstream does not supply them.
-// Model id uses pi-ai's built-in Anthropic catalog.
-export const DEFAULT_PROVIDER = "anthropic";
-export const DEFAULT_MODEL = "claude-opus-4-5";
-// Context window: Opus 4.5 supports ~200k tokens (per pi-ai models.generated.ts).
-export const DEFAULT_CONTEXT_TOKENS = 200_000;
+// OpenSecret fork: default to Maple's TEE-secured Kimi K2 Thinking model
+export const DEFAULT_PROVIDER = "maple";
+export const DEFAULT_MODEL = "kimi-k2-thinking";
+// Context window: Kimi K2 supports 256k tokens
+export const DEFAULT_CONTEXT_TOKENS = 256_000;
