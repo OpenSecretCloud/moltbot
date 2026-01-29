@@ -233,8 +233,8 @@ export type MemorySearchConfig = {
     /** Enable session transcript indexing (experimental, default: false). */
     sessionMemory?: boolean;
   };
-  /** Embedding provider mode. */
-  provider?: "openai" | "gemini" | "local";
+  /** Embedding provider mode (OpenSecret fork adds "maple" for TEE-encrypted embeddings). */
+  provider?: "openai" | "gemini" | "local" | "maple";
   remote?: {
     baseUrl?: string;
     apiKey?: string;
@@ -252,8 +252,8 @@ export type MemorySearchConfig = {
       timeoutMinutes?: number;
     };
   };
-  /** Fallback behavior when embeddings fail. */
-  fallback?: "openai" | "gemini" | "local" | "none";
+  /** Fallback behavior when embeddings fail (OpenSecret fork adds "maple"). */
+  fallback?: "openai" | "gemini" | "local" | "maple" | "none";
   /** Embedding model id (remote) or alias (local). */
   model?: string;
   /** Local embedding settings (node-llama-cpp). */
